@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vaani — AI Speaking Coach</title>
+  <meta name="description" content="AI voice English-speaking coach — voice pipeline and conversation console." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Tamil:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/voice.css" />
+  <link rel="stylesheet" href="css/conversation.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span class="brand-name">Vaani</span>
+        <span class="brand-tagline">AI speaking coach</span>
+      </div>
+      <span class="phase-badge">Phase 4 — conversation console</span>
+    </header>
+
+    <main>
+      <section class="voice-console orb-console" data-state="idle" aria-live="polite">
+        <div class="orb-wrap">
+          <div class="orb-ring" aria-hidden="true"></div>
+          <div class="orb-bars" aria-hidden="true">
+            <span class="orb-bar"></span>
+            <span class="orb-bar"></span>
+            <span class="orb-bar"></span>
+            <span class="orb-bar"></span>
+            <span class="orb-bar"></span>
+            <span class="orb-bar"></span>
+            <span class="orb-bar"></span>
+          </div>
+        </div>
+
+        <div class="voice-status">
+          <span class="voice-status-label">Tap to speak</span>
+          <span class="voice-status-hint">Press start and speak naturally</span>
+        </div>
+
+        <button type="button" class="mic-button" data-active="false" aria-pressed="false">
+          ◉ Start
+        </button>
+
+        <div class="error-banner" data-visible="false" role="alert"></div>
+      </section>
+
+      <section class="panel conversation-panel">
+        <span class="panel-eyebrow">Full conversation loop</span>
+        <h2 class="panel-title">Have a conversation</h2>
+        <p class="conversation-intro">
+          The AI speaks first, then keeps listening automatically after each
+          reply — no need to press Start again between turns.
+        </p>
+
+        <div class="conversation-controls">
+          <label for="topic-select" class="visually-hidden">Conversation topic</label>
+          <select id="topic-select" class="topic-select">
+            <option value="Surprise Me">Surprise me</option>
+            <option value="Casual Conversation">Casual Conversation</option>
+            <option value="Job Interview">Job Interview</option>
+            <option value="Office Conversation">Office Conversation</option>
+            <option value="Meeting Practice">Meeting Practice</option>
+            <option value="Presentation Practice">Presentation Practice</option>
+            <option value="Customer Conversation">Customer Conversation</option>
+            <option value="Travel Conversation">Travel Conversation</option>
+            <option value="Daily English">Daily English</option>
+            <option value="Debate">Debate</option>
+            <option value="Storytelling">Storytelling</option>
+            <option value="Vocabulary Practice">Vocabulary Practice</option>
+          </select>
+          <button type="button" class="conversation-toggle">
+            ◉ Start Conversation
+          </button>
+        </div>
+
+        <div class="conversation-status" data-state="idle">
+          <span class="conversation-status-dot" aria-hidden="true"></span>
+          <span class="conversation-status-label">Not started</span>
+        </div>
+
+        <div class="score-readout" data-visible="false">
+          <div class="score-item" data-score="grammar">
+            <span class="score-item-label">Grammar</span>
+            <span class="score-item-value">—</span>
+          </div>
+          <div class="score-item" data-score="fluency">
+            <span class="score-item-label">Fluency</span>
+            <span class="score-item-value">—</span>
+          </div>
+          <div class="score-item" data-score="confidence">
+            <span class="score-item-label">Confidence</span>
+            <span class="score-item-value">—</span>
+          </div>
+          <div class="score-item" data-score="vocabulary">
+            <span class="score-item-label">Vocabulary</span>
+            <span class="score-item-value">—</span>
+          </div>
+        </div>
+        <p class="score-readout-note">
+          Confidence is an AI-generated practice metric, not a
+          psychological measurement.
+        </p>
+
+        <div class="chat-thread" aria-live="polite">
+          <p class="chat-empty">Your conversation will appear here once you start.</p>
+        </div>
+
+        <div class="conversation-summary" data-visible="false"></div>
+      </section>
+
+      <div class="section-header-group">
+        <h2 class="section-heading">Voice pipeline test (standalone)</h2>
+        <p class="section-subheading">
+          These test the STT/TTS pipeline directly, without a conversation —
+          handy for checking the mic or a phrase in isolation.
+        </p>
+      </div>
+      <section class="panel-grid">
+        <div class="panel">
+          <span class="panel-eyebrow">Speech → text</span>
+          <h2 class="panel-title">What I heard</h2>
+          <div class="transcript-box">
+            <p class="transcript-empty">Nothing yet — try the mic above.</p>
+          </div>
+          <p>
+            Mixing in Tamil, Telugu, Hindi, Malayalam, or Kannada is fine —
+            each language transcribes in its own script.
+          </p>
+        </div>
+
+        <div class="panel">
+          <span class="panel-eyebrow">Text → speech</span>
+          <h2 class="panel-title">Say it out loud</h2>
+          <div class="field-row">
+            <textarea
+              class="tts-input"
+              placeholder="Type something for the coach to say…"
+              maxlength="2000"
+            >How was your day at work?</textarea>
+          </div>
+          <div class="speed-row">
+            <label for="speed-slider">Speaking speed</label>
+            <input
+              id="speed-slider"
+              class="speed-slider"
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.05"
+              value="1"
+            />
+            <span class="speed-value">1.00x</span>
+          </div>
+          <button type="button" class="secondary-button tts-submit">Speak this</button>
+        </div>
+      </section>
+    </main>
+
+    <p class="footer-note">
+      Backend: FastAPI + Gemini · Audio is processed for transcription and
+      never stored unless you enable it in Settings.
+    </p>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/conversation.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

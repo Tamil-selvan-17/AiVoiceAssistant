@@ -1,0 +1,367 @@
+/* ===========================================================================
+   VAANI — Voice console
+   ===========================================================================
+   Signature element: the orb is a real amplitude-reactive visualizer, not a
+   decorative animation -- its bars are driven frame-by-frame by an
+   AnalyserNode reading either the live microphone (LISTENING) or the
+   playing response audio (AI_SPEAKING), via voice.js. Idle/processing use
+   restrained, deliberate motion (a slow breathing ring; a thin spinning
+   arc) rather than looping "AI sparkle" effects.
+   ========================================================================= */
+
+.app-shell {
+  min-height: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+/* --- Header --- */
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.brand-mark {
+  color: var(--color-amber);
+  font-size: 0.85em;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.brand-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.phase-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  letter-spacing: 0.04em;
+}
+
+/* --- Voice console (the hero) --- */
+
+.voice-console {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-7) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.orb-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.orb-bars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 56px;
+}
+
+.orb-bar {
+  width: 5px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-text-faint);
+  transform-origin: center;
+  transition: background 0.4s ease, transform 0.05s linear;
+}
+
+/* IDLE: slow breathing ring, bars at rest */
+.orb-console[data-state="idle"] .orb-ring {
+  animation: breathe 3.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-amber-soft);
+    border-color: var(--color-border);
+  }
+  50% {
+    box-shadow: 0 0 0 10px transparent;
+    border-color: var(--color-border-soft);
+  }
+}
+
+/* LISTENING: solid amber ring, bars are amplitude-reactive (JS sets scaleY) */
+.orb-console[data-state="listening"] .orb-ring {
+  border-color: var(--color-amber);
+  box-shadow: 0 0 24px var(--color-amber-soft);
+}
+.orb-console[data-state="listening"] .orb-bar {
+  background: var(--color-amber);
+}
+
+/* PROCESSING: thin spinning arc */
+.orb-console[data-state="processing"] .orb-ring {
+  border-color: var(--color-border);
+  border-top-color: var(--color-teal);
+  animation: spin 0.9s linear infinite;
+}
+.orb-console[data-state="processing"] .orb-bar {
+  background: var(--color-text-faint);
+  transform: scaleY(1) !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* AI_SPEAKING: teal ring, bars reactive to playback amplitude */
+.orb-console[data-state="speaking"] .orb-ring {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 24px var(--color-teal-soft);
+}
+.orb-console[data-state="speaking"] .orb-bar {
+  background: var(--color-teal);
+}
+
+/* ERROR: coral ring, static */
+.orb-console[data-state="error"] .orb-ring {
+  border-color: var(--color-coral);
+  box-shadow: 0 0 24px var(--color-coral-soft);
+}
+.orb-console[data-state="error"] .orb-bar {
+  background: var(--color-coral);
+  transform: scaleY(1) !important;
+}
+
+.voice-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.voice-status-label {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.voice-status-hint {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+  letter-spacing: 0.02em;
+}
+
+.mic-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-amber);
+  background: var(--color-amber-soft);
+  color: var(--color-amber);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.mic-button:hover {
+  background: rgba(232, 163, 61, 0.28);
+}
+
+.mic-button:active {
+  transform: scale(0.97);
+}
+
+.mic-button[data-active="true"] {
+  border-color: var(--color-coral);
+  background: var(--color-coral-soft);
+  color: var(--color-coral);
+}
+
+.mic-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Panels --- */
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+@media (max-width: 720px) {
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.panel-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.transcript-box {
+  min-height: 88px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border);
+  padding: var(--space-4);
+  font-size: 0.95rem;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transcript-empty {
+  color: var(--color-text-faint);
+  font-style: italic;
+}
+
+.transcript-meta {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-faint);
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.field-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+textarea.tts-input {
+  flex: 1;
+  resize: vertical;
+  min-height: 64px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: var(--space-3);
+}
+
+textarea.tts-input:focus-visible {
+  border-color: var(--color-amber);
+}
+
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.secondary-button {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-banner {
+  border: 1px solid var(--color-coral);
+  background: var(--color-coral-soft);
+  color: var(--color-coral);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.85rem;
+  display: none;
+}
+
+.error-banner[data-visible="true"] {
+  display: block;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-text-faint);
+}

@@ -1,0 +1,141 @@
+/* ===========================================================================
+   VAANI — Design tokens
+   ===========================================================================
+   "Vaani" (வாணி) — a Tamil word for voice/speech. Named deliberately: this
+   is a coaching console for Tamil speakers building English fluency, so the
+   product's own name comes from the language it starts in, not the one
+   it's teaching. Rename in one place (--brand-name is set in index.html)
+   if you'd prefer something else.
+
+   Palette avoids both the "warm cream + terracotta" and "near-black + acid
+   accent" AI-app defaults. Base is a deep ink-navy (calm, late-night-study
+   focus) with a warm amber accent (a lamp on a desk, a mentor's presence)
+   rather than a cold sci-fi blue/green — this is a coach, not a robot.
+   ========================================================================= */
+
+:root {
+  /* --- Color: surfaces --- */
+  --color-bg: #0e1420;
+  --color-surface: #161d2c;
+  --color-surface-raised: #1c2437;
+  --color-border: #2a3348;
+  --color-border-soft: #212940;
+
+  /* --- Color: text --- */
+  --color-text: #ece7db;
+  --color-text-muted: #8b93a9;
+  --color-text-faint: #5c6478;
+
+  /* --- Color: accents --- */
+  --color-amber: #e8a33d;
+  --color-amber-soft: rgba(232, 163, 61, 0.16);
+  --color-teal: #4fb6a8;
+  --color-teal-soft: rgba(79, 182, 168, 0.16);
+  --color-coral: #e2694b;
+  --color-coral-soft: rgba(226, 105, 75, 0.16);
+
+  /* --- Type --- */
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-tamil: "IBM Plex Sans Tamil", "Noto Sans Tamil", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* --- Scale --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-full: 999px;
+
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: light) {
+  /* This app is designed dark-first (spec §55). If the OS prefers light,
+     we still hold the dark palette intentionally rather than half-adapting
+     into something muddy -- a coaching console at 11pm should look the
+     same as one at 11am. */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image: radial-gradient(
+    circle at 50% 0%,
+    rgba(232, 163, 61, 0.06),
+    transparent 55%
+  );
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+a {
+  color: var(--color-amber);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 2px;
+}
+
+.lang-ta {
+  font-family: var(--font-tamil);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,36 @@
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DATABASE: ai_voice_assistant
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_MODEL: ${NVIDIA_MODEL:-}
+      NVIDIA_BASE_URL: ${NVIDIA_BASE_URL:-}
+      CORS_ORIGINS: http://localhost:8000
+      LOG_LEVEL: INFO
+      FRONTEND_DIR: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend:ro
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo-data:

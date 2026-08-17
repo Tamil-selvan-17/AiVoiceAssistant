@@ -1,0 +1,346 @@
+/* ===========================================================================
+   Conversation panel (Phase 4) -- topic picker, status indicator, chat
+   thread. Reuses design tokens and .panel/.secondary-button/.error-banner
+   from global.css/voice.css rather than redefining them.
+   ========================================================================= */
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.conversation-panel {
+  gap: var(--space-4);
+}
+
+.conversation-intro {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.conversation-controls {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.topic-select {
+  flex: 1 1 220px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-3);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.topic-select:focus-visible,
+.conversation-toggle:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+.conversation-toggle {
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-amber);
+  background: var(--color-amber-soft);
+  color: var(--color-amber);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.conversation-toggle:hover:not(:disabled) {
+  background: var(--color-amber);
+  color: var(--color-bg);
+}
+
+.conversation-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.conversation-toggle[data-active="true"] {
+  border-color: var(--color-coral);
+  background: var(--color-coral-soft);
+  color: var(--color-coral);
+}
+
+.conversation-toggle[data-active="true"]:hover:not(:disabled) {
+  background: var(--color-coral);
+  color: var(--color-bg);
+}
+
+/* --- Status indicator: a simple pulsing dot, not a full second orb --- */
+
+.conversation-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.conversation-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: var(--color-text-faint);
+  flex-shrink: 0;
+}
+
+.conversation-status[data-state="idle"] .conversation-status-dot {
+  background: var(--color-text-faint);
+}
+
+.conversation-status[data-state="listening"] .conversation-status-dot {
+  background: var(--color-teal);
+  box-shadow: 0 0 0 0 var(--color-teal-soft);
+  animation: conversation-pulse 1.6s ease-out infinite;
+}
+
+.conversation-status[data-state="processing"] .conversation-status-dot {
+  background: var(--color-amber);
+  animation: conversation-blink 0.9s ease-in-out infinite;
+}
+
+.conversation-status[data-state="speaking"] .conversation-status-dot {
+  background: var(--color-amber);
+  box-shadow: 0 0 0 0 var(--color-amber-soft);
+  animation: conversation-pulse 1s ease-out infinite;
+}
+
+.conversation-status[data-state="error"] .conversation-status-dot {
+  background: var(--color-coral);
+}
+
+@keyframes conversation-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 182, 168, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(79, 182, 168, 0);
+  }
+}
+
+@keyframes conversation-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* --- Chat thread --- */
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.chat-empty {
+  color: var(--color-text-faint);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.chat-bubble-assistant {
+  align-self: flex-start;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-soft);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.chat-bubble-user {
+  align-self: flex-end;
+  background: var(--color-teal-soft);
+  border: 1px solid rgba(79, 182, 168, 0.35);
+  border-bottom-right-radius: var(--radius-sm);
+  color: var(--color-text);
+}
+
+.chat-bubble-meta {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-1);
+}
+
+/* --- Chat annotations: corrections / new vocabulary --- */
+
+.chat-annotation {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.chat-annotation p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.chat-annotation-title {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-bottom: var(--space-1);
+}
+
+.chat-annotation-correction {
+  background: rgba(230, 179, 90, 0.08);
+  border: 1px solid rgba(230, 179, 90, 0.28);
+}
+
+.chat-annotation-correction .chat-annotation-title {
+  color: var(--color-amber);
+}
+
+.chat-annotation-vocabulary {
+  background: rgba(79, 182, 168, 0.08);
+  border: 1px solid rgba(79, 182, 168, 0.28);
+}
+
+.chat-annotation-vocabulary .chat-annotation-title {
+  color: var(--color-teal);
+}
+
+/* --- Score readout --- */
+
+.score-readout {
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.score-readout[data-visible="true"] {
+  display: grid;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.score-item-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-faint);
+}
+
+.score-item-value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.score-readout-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-faint);
+}
+
+/* --- End-of-conversation summary --- */
+
+.conversation-summary {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+}
+
+.conversation-summary[data-visible="true"] {
+  display: flex;
+}
+
+.conversation-summary h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.conversation-summary ul {
+  margin: var(--space-1) 0 0 0;
+  padding-left: 1.2em;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.conversation-summary li {
+  margin-bottom: var(--space-1);
+}
+
+.summary-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-faint);
+}
+
+.summary-meta-muted {
+  font-style: italic;
+}
+
+/* --- Section heading above the standalone Phase 3 test panels --- */
+
+.section-header-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.section-heading {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-subheading {
+  color: var(--color-text-faint);
+  font-size: 0.8rem;
+  margin: 0;
+}
