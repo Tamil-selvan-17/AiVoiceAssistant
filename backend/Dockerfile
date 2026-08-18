@@ -1,3 +1,8 @@
+# Build context is the REPO ROOT, not backend/ -- so this image can bake in
+# both backend/ and frontend/ and be deployed as a single web service (see
+# docs/DEPLOYMENT.md and render.yaml). docker-compose.yml and Render's
+# render.yaml both point their build context at the repo root and this
+# Dockerfile at backend/Dockerfile.
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -8,15 +13,15 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-
-# frontend/ is copied in alongside backend/ by docker-compose / build context;
-# see docker-compose.yml at the repo root for local development.
+COPY backend/app ./app
+COPY backend/pytest.ini ./pytest.ini
+COPY frontend ./frontend
 
 ENV PYTHONUNBUFFERED=1
+ENV FRONTEND_DIR=/app/frontend
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

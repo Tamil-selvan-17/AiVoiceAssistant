@@ -339,3 +339,27 @@
     }
   });
 })();
+
+/** Tab switcher: Practice / Dashboard. Dashboard data is (re)loaded every
+ * time the tab is opened, so it's never stale after finishing a
+ * conversation elsewhere in the same page. */
+(() => {
+  const tabs = document.querySelectorAll(".view-tab");
+  const views = {
+    practice: document.getElementById("view-practice"),
+    dashboard: document.getElementById("view-dashboard"),
+  };
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.view;
+
+      tabs.forEach((t) => t.setAttribute("aria-pressed", String(t === tab)));
+      Object.entries(views).forEach(([name, el]) => {
+        el.hidden = name !== target;
+      });
+
+      if (target === "dashboard") Dashboard.load();
+    });
+  });
+})();

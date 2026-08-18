@@ -105,6 +105,35 @@ const Api = (() => {
     return response.json();
   }
 
+  /** Learning dashboard summary: totals, averages, streak, recent
+   * conversations, frequent mistake patterns (project spec §39-40). */
+  async function getDashboard() {
+    const response = await fetch("/api/analytics/dashboard");
+    if (!response.ok) return parseErrorOrThrow(response);
+    return response.json();
+  }
+
+  /** Chart data: one point per analyzed conversation (project spec §39). */
+  async function getProgress() {
+    const response = await fetch("/api/analytics/progress");
+    if (!response.ok) return parseErrorOrThrow(response);
+    return response.json();
+  }
+
+  /** All stored vocabulary words (project spec §30, §43). */
+  async function getVocabulary() {
+    const response = await fetch("/api/vocabulary");
+    if (!response.ok) return parseErrorOrThrow(response);
+    return response.json();
+  }
+
+  /** @param {string} wordId */
+  async function deleteVocabularyWord(wordId) {
+    const response = await fetch(`/api/vocabulary/${wordId}`, { method: "DELETE" });
+    if (!response.ok) return parseErrorOrThrow(response);
+    return response.json();
+  }
+
   return {
     checkVad,
     transcribe,
@@ -112,5 +141,9 @@ const Api = (() => {
     getSettings,
     createConversation,
     analyzeConversation,
+    getDashboard,
+    getProgress,
+    getVocabulary,
+    deleteVocabularyWord,
   };
 })();

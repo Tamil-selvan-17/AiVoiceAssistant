@@ -22,6 +22,7 @@ class VocabularyWordSchema(BaseModel):
 class VocabularyEntryResponse(BaseModel):
     """A stored vocabulary collection document (project spec §30)."""
 
+    id: str
     word: str
     meaning: str
     translation: str = ""

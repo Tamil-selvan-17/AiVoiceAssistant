@@ -140,15 +140,24 @@ async def analyze_conversation_endpoint(
         new_words_learned=new_words_learned,
     )
 
-    await progress_repo.record_conversation_completion(
-        db,
-        duration_seconds=conversation.get("duration_seconds") or 0,
-        fluency_score=summary["fluency_score"],
-        confidence_score=summary["confidence_score"],
-        grammar_score=summary["grammar_score"],
-        vocabulary_score=summary["vocabulary_score"],
-        new_words_learned=new_words_learned,
-    )
+    # Persisting the summary is safe to redo (e.g. re-fetching a completed
+    # conversation's summary later from the dashboard) -- but folding it
+    # into the rolling learning_progress aggregate is NOT idempotent
+    # (record_conversation_completion increments running counters), so
+    # that step only runs the first time this conversation is analyzed.
+    already_analyzed = conversation.get("analysis_summary") is not None
+    await repo.save_analysis_summary(db, conversation_id, summary)
+
+    if not already_analyzed:
+        await progress_repo.record_conversation_completion(
+            db,
+            duration_seconds=conversation.get("duration_seconds") or 0,
+            fluency_score=summary["fluency_score"],
+            confidence_score=summary["confidence_score"],
+            grammar_score=summary["grammar_score"],
+            vocabulary_score=summary["vocabulary_score"],
+            new_words_learned=new_words_learned,
+        )
 
     return ConversationSummaryResponse(
         conversation_id=conversation_id,

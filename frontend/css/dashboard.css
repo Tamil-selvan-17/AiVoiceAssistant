@@ -1,0 +1,302 @@
+/* ===========================================================================
+   Dashboard (Phase 6) -- view tabs, stat cards, SVG progress chart,
+   frequent-mistakes/history/vocabulary lists.
+   ========================================================================= */
+
+/* --- View tabs (header) --- */
+
+.view-tabs {
+  display: flex;
+  gap: var(--space-1);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  align-self: center;
+}
+
+.view-tab {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.view-tab[aria-pressed="true"] {
+  background: var(--color-amber);
+  color: var(--color-bg);
+}
+
+.view-tab:hover:not([aria-pressed="true"]) {
+  color: var(--color-text);
+}
+
+.view-tab:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+/* --- Stat cards --- */
+
+.dashboard-stats {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 720px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-faint);
+}
+
+/* --- Progress chart --- */
+
+.progress-chart-legend {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.legend-item::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legend-grammar::before {
+  background: var(--color-amber);
+}
+.legend-fluency::before {
+  background: var(--color-teal);
+}
+.legend-confidence::before {
+  background: var(--color-coral);
+}
+.legend-vocabulary::before {
+  background: var(--color-lavender);
+}
+
+.progress-chart-wrap {
+  width: 100%;
+}
+
+.progress-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-gridline {
+  stroke: var(--color-border-soft);
+  stroke-width: 1;
+}
+
+.chart-axis-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--color-text-faint);
+}
+
+.chart-line {
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-line.legend-grammar {
+  stroke: var(--color-amber);
+}
+.chart-line.legend-fluency {
+  stroke: var(--color-teal);
+}
+.chart-line.legend-confidence {
+  stroke: var(--color-coral);
+}
+.chart-line.legend-vocabulary {
+  stroke: var(--color-lavender);
+}
+
+.chart-dot.legend-grammar {
+  fill: var(--color-amber);
+}
+.chart-dot.legend-fluency {
+  fill: var(--color-teal);
+}
+.chart-dot.legend-confidence {
+  fill: var(--color-coral);
+}
+.chart-dot.legend-vocabulary {
+  fill: var(--color-lavender);
+}
+
+.chart-empty {
+  color: var(--color-text-faint);
+  font-size: 0.85rem;
+  margin: var(--space-4) 0;
+}
+
+/* --- Lists: mistakes / history / vocabulary --- */
+
+.mistake-list,
+.history-list,
+.vocabulary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.list-empty {
+  color: var(--color-text-faint);
+  font-size: 0.85rem;
+}
+
+.mistake-item,
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.mistake-category {
+  font-weight: 600;
+}
+
+.mistake-count {
+  color: var(--color-text-faint);
+  font-weight: 400;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.mistake-tip,
+.history-meta {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.history-topic {
+  font-weight: 600;
+}
+
+.vocabulary-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.vocabulary-item {
+  position: relative;
+  padding: var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.vocabulary-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-right: var(--space-5);
+}
+
+.vocabulary-word {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.vocabulary-difficulty {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.vocabulary-meaning,
+.vocabulary-translation {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.vocabulary-delete {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-soft);
+  background: transparent;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-delete:hover:not(:disabled) {
+  background: var(--color-coral-soft);
+  border-color: var(--color-coral);
+  color: var(--color-coral);
+}
+
+.vocabulary-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

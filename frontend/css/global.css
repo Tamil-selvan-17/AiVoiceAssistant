@@ -33,6 +33,8 @@
   --color-teal-soft: rgba(79, 182, 168, 0.16);
   --color-coral: #e2694b;
   --color-coral-soft: rgba(226, 105, 75, 0.16);
+  --color-lavender: #9b8cd9;
+  --color-lavender-soft: rgba(155, 140, 217, 0.16);
 
   /* --- Type --- */
   --font-display: "Space Grotesk", "Segoe UI", sans-serif;

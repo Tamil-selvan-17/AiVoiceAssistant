@@ -1,0 +1,53 @@
+# Render Blueprint for the AI Voice Communication Assistant.
+#
+# Deploy via https://dashboard.render.com/blueprints -> "New Blueprint
+# Instance" -> point at this repo. Render reads this file automatically.
+# See docs/DEPLOYMENT.md for the full walkthrough (including MongoDB Atlas
+# setup, since Render doesn't offer managed MongoDB directly).
+#
+# Secrets (API keys, MONGODB_URI) are intentionally NOT set here -- they're
+# marked sync: false below, which makes Render prompt for them in the
+# dashboard instead of storing them in this file / git history.
+
+services:
+  - type: web
+    name: ai-voice-assistant
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: ENABLE_API_DOCS
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MAX_CONVERSATION_MINUTES
+        value: "30"
+      - key: MAX_DAILY_AI_REQUESTS
+        value: "100"
+      - key: AI_REQUEST_TIMEOUT_SECONDS
+        value: "30"
+      - key: MONGODB_DATABASE
+        value: ai_voice_assistant
+      # --- Secrets: set these in the Render dashboard, not here ---
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_MODEL
+        sync: false
+      - key: NVIDIA_BASE_URL
+        sync: false
+      # Set this to your actual Render URL once you know it, e.g.
+      # https://ai-voice-assistant.onrender.com -- see docs/DEPLOYMENT.md.
+      - key: CORS_ORIGINS
+        sync: false

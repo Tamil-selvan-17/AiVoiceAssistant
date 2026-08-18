@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/voice.css" />
   <link rel="stylesheet" href="css/conversation.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
 </head>
 <body>
   <div class="app-shell">
@@ -25,10 +26,15 @@
         <span class="brand-name">Vaani</span>
         <span class="brand-tagline">AI speaking coach</span>
       </div>
-      <span class="phase-badge">Phase 4 — conversation console</span>
+      <nav class="view-tabs" aria-label="Sections">
+        <button type="button" class="view-tab" data-view="practice" aria-pressed="true">Practice</button>
+        <button type="button" class="view-tab" data-view="dashboard" aria-pressed="false">Dashboard</button>
+      </nav>
+      <span class="phase-badge">Phase 6 — learning dashboard</span>
     </header>
 
     <main>
+    <div id="view-practice" class="app-view">
       <section class="voice-console orb-console" data-state="idle" aria-live="polite">
         <div class="orb-wrap">
           <div class="orb-ring" aria-hidden="true"></div>
@@ -165,6 +171,60 @@
           <button type="button" class="secondary-button tts-submit">Speak this</button>
         </div>
       </section>
+    </div>
+
+    <div id="view-dashboard" class="app-view" hidden>
+      <section class="panel-grid dashboard-stats">
+        <div class="stat-card"><span class="stat-value" data-stat="total_conversations">—</span><span class="stat-label">Conversations</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="total_speaking_time">—</span><span class="stat-label">Speaking time</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="current_streak_days">—</span><span class="stat-label">Day streak</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="vocabulary_learned_count">—</span><span class="stat-label">Words learned</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="avg_fluency">—</span><span class="stat-label">Avg fluency</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="avg_confidence">—</span><span class="stat-label">Avg confidence</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="avg_grammar">—</span><span class="stat-label">Avg grammar</span></div>
+        <div class="stat-card"><span class="stat-value" data-stat="avg_vocabulary">—</span><span class="stat-label">Avg vocabulary</span></div>
+      </section>
+
+      <section class="panel">
+        <span class="panel-eyebrow">Progress over time</span>
+        <h2 class="panel-title">Scores by conversation</h2>
+        <div class="progress-chart-legend">
+          <span class="legend-item legend-grammar">Grammar</span>
+          <span class="legend-item legend-fluency">Fluency</span>
+          <span class="legend-item legend-confidence">Confidence</span>
+          <span class="legend-item legend-vocabulary">Vocabulary</span>
+        </div>
+        <div class="progress-chart-wrap">
+          <p class="chart-empty">Complete and analyze a conversation to see your progress here.</p>
+        </div>
+      </section>
+
+      <section class="panel-grid">
+        <div class="panel">
+          <span class="panel-eyebrow">Personalized learning</span>
+          <h2 class="panel-title">Frequent mistakes</h2>
+          <ul class="mistake-list">
+            <li class="list-empty">No patterns yet — they'll show up after a few conversations.</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <span class="panel-eyebrow">History</span>
+          <h2 class="panel-title">Recent conversations</h2>
+          <ul class="history-list">
+            <li class="list-empty">No conversations yet.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel">
+        <span class="panel-eyebrow">Vocabulary</span>
+        <h2 class="panel-title">Words you've learned</h2>
+        <ul class="vocabulary-list">
+          <li class="list-empty">New words you learn in conversations will appear here.</li>
+        </ul>
+      </section>
+    </div>
     </main>
 
     <p class="footer-note">
@@ -176,6 +236,7 @@
   <script src="js/api.js"></script>
   <script src="js/voice.js"></script>
   <script src="js/conversation.js"></script>
+  <script src="js/dashboard.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

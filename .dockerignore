@@ -1,0 +1,22 @@
+# Keeps the Docker build context small and prevents local dev artifacts
+# (and anything secret) from ever being copyable into an image, even by
+# accident.
+
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+backend/.env
+**/.env
+!backend/.env.example
+
+docs
+README.md
+docker-compose.yml
+render.yaml
+
+node_modules
+.DS_Store
+.idea
+.vscode

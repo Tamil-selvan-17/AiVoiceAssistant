@@ -16,10 +16,12 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import ai as ai_routes
+from app.api.routes import analytics as analytics_routes
 from app.api.routes import conversation_ws as conversation_ws_routes
 from app.api.routes import conversations as conversations_routes
 from app.api.routes import health as health_routes
 from app.api.routes import settings as settings_routes
+from app.api.routes import vocabulary as vocabulary_routes
 from app.api.routes import voice as voice_routes
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
@@ -76,6 +78,8 @@ def create_app() -> FastAPI:
     app.include_router(voice_routes.router)
     app.include_router(conversations_routes.router)
     app.include_router(conversation_ws_routes.router)
+    app.include_router(vocabulary_routes.router)
+    app.include_router(analytics_routes.router)
 
     # Frontend is a static, framework-free site that normally sits alongside
     # `backend/` in the repo. Mounted last so it never shadows API routes,

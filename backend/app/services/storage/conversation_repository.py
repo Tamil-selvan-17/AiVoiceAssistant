@@ -107,3 +107,18 @@ async def count_assistant_messages_today(db: AsyncIOMotorDatabase) -> int:
     return await db[CONVERSATION_MESSAGES].count_documents(
         {"speaker": "assistant", "timestamp": {"$gte": start_of_day}}
     )
+
+
+async def save_analysis_summary(
+    db: AsyncIOMotorDatabase, conversation_id: str, summary: dict[str, Any]
+) -> None:
+    """
+    Persists the end-of-conversation summary (scores + highlights) onto the
+    conversation document itself, computed once by POST /analyze (project
+    spec §38). This is what gives the Phase 6 dashboard a natural
+    "scores over time" series -- one summary per conversation, no new
+    collection needed -- via list_conversations().
+    """
+    await db[CONVERSATIONS].update_one(
+        {"_id": conversation_id}, {"$set": {"analysis_summary": summary}}
+    )

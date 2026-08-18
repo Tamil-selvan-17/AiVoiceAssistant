@@ -1,18 +1,19 @@
 # AI Voice Communication Assistant
 
 A single-user AI voice English-speaking coach. This repo currently contains
-**Phase 1 (Foundation)**, **Phase 2 (AI Provider Layer)**, **Phase 3 (Voice
-Pipeline)**, **Phase 4 (Conversation Engine)**, and **Phase 5 (Learning
-Analysis)** of the full build: the FastAPI app skeleton, MongoDB
-connectivity, structured logging, global error handling, security
-middleware, health/readiness checks, a provider-agnostic AI abstraction
-(Gemini + NVIDIA), a global settings API, a working voice pipeline (mic
-capture, VAD, real speech-to-text, real text-to-speech), a continuous
-conversation loop over WebSocket, and now live grammar corrections,
-vocabulary detection, and fluency/confidence/vocabulary scoring shown
-turn-by-turn in the chat — plus an end-of-conversation summary. The
-learning dashboard (history, charts, personalized recommendations) is
-Phase 6.
+**Phase 1 (Foundation)** through **Phase 6 (Learning Dashboard)** of the
+full build: the FastAPI app skeleton, MongoDB connectivity, structured
+logging, global error handling, security middleware, health/readiness
+checks, a provider-agnostic AI abstraction (Gemini + NVIDIA), a global
+settings API, a working voice pipeline (mic capture, VAD, real
+speech-to-text, real text-to-speech), a continuous conversation loop over
+WebSocket, live grammar corrections/vocabulary detection/scoring shown
+turn-by-turn in the chat, and now a full learning dashboard — progress
+stats, a score-over-time chart, frequent-mistake patterns, conversation
+history, and vocabulary review. Production hardening and the Render
+deployment guide are documented already (see `docs/DEPLOYMENT.md`);
+remaining Phase 7 items (rate limiting polish, broader test coverage) are
+still open.
 
 There is **no authentication** anywhere in this project by design — no
 login, no JWT, no users collection. The app opens straight to its dashboard.
@@ -173,6 +174,47 @@ login, no JWT, no users collection. The app opens straight to its dashboard.
   arrive); this was judged the simpler, more honest default given
   everything else already in Phase 4
 
+### Phase 6 — Learning Dashboard
+- **`GET /api/analytics/dashboard`** — total conversations, total speaking
+  time, running score averages, vocabulary learned, current streak (spec
+  §39), recent conversation history, and frequent mistake patterns (spec
+  §40), all pure aggregation over data Phase 5 already stores — no AI
+  calls, no extra cost
+- **`GET /api/analytics/progress`** — one point per *analyzed* conversation
+  (topic, date, all four scores), oldest-first, for the progress chart
+- **`GET /api/vocabulary`, `DELETE /api/vocabulary/{id}`** — review and
+  prune the vocabulary collection Phase 5 populates
+- **`mistake_pattern_analyzer.py`** — buckets grammar corrections into
+  categories (Past tense, Articles, Prepositions, Subject-verb agreement,
+  Word choice, Other) by rule-based keyword matching on the correction's
+  explanation text, per the "Frequent mistakes" example in spec §40.
+  Deliberately not another AI call, and deliberately not dressed up as
+  real grammatical-error-type classification — it's a best-effort bucket,
+  documented as such, with unmatched corrections honestly landing in
+  "Other" rather than force-fit into a category
+- **A real idempotency bug found and fixed while building this**: calling
+  `POST /conversations/{id}/analyze` a second time on an
+  already-completed conversation was silently double-counting that
+  conversation into the `learning_progress` running averages/totals.
+  Fixed by only folding results into `learning_progress` the first time a
+  conversation is analyzed (tracked via a `analysis_summary` field
+  written onto the conversation document, which doubles as what the
+  progress chart reads) — caught before shipping via a dedicated
+  "analyze called twice" test, not found live
+- **A new "Dashboard" tab** in the frontend, next to "Practice" — stat
+  cards, a hand-rolled multi-series SVG line chart (grammar/fluency/
+  confidence/vocabulary over time; deliberately no charting library
+  dependency, consistent with keeping the frontend lightweight), a
+  frequent-mistakes list, conversation history, and a vocabulary grid with
+  working delete buttons. Data reloads every time the tab is opened, so
+  it's never stale after finishing a conversation on the Practice tab
+- Also this phase: `backend/Dockerfile` was restructured to build from
+  the **repo root** (not `backend/`) so the image can bake in both
+  `backend/` and `frontend/` and deploy as a single Render web service;
+  added `render.yaml` and `docs/DEPLOYMENT.md` (GitHub push walkthrough +
+  Render deploy walkthrough, including MongoDB Atlas setup since Render
+  has no managed MongoDB)
+
 ## Project structure
 
 ```
@@ -187,7 +229,9 @@ ai-voice-assistant/
 │   │   │   │   ├── ai.py
 │   │   │   │   ├── voice.py
 │   │   │   │   ├── conversations.py    # CRUD + POST /analyze
-│   │   │   │   └── conversation_ws.py  # WS /ws/conversation/{id}
+│   │   │   │   ├── conversation_ws.py  # WS /ws/conversation/{id}
+│   │   │   │   ├── vocabulary.py
+│   │   │   │   └── analytics.py        # dashboard + progress
 │   │   │   └── dependencies.py
 │   │   ├── core/
 │   │   │   ├── config.py      # Settings (env vars)
@@ -201,7 +245,8 @@ ai-voice-assistant/
 │   │   │   ├── settings.py
 │   │   │   ├── voice.py
 │   │   │   ├── conversation.py
-│   │   │   └── analysis.py
+│   │   │   ├── analysis.py
+│   │   │   └── analytics.py
 │   │   ├── services/
 │   │   │   ├── ai/
 │   │   │   │   ├── base_provider.py    # AIProvider interface
@@ -226,6 +271,7 @@ ai-voice-assistant/
 │   │   │   │   ├── fluency_analyzer.py
 │   │   │   │   ├── confidence_analyzer.py
 │   │   │   │   ├── pronunciation_analyzer.py  # honest stub, no fake scores
+│   │   │   │   ├── mistake_pattern_analyzer.py
 │   │   │   │   └── scoring_engine.py
 │   │   │   └── storage/
 │   │   │       ├── settings_repository.py
@@ -234,15 +280,19 @@ ai-voice-assistant/
 │   │   │       ├── learning_progress_repository.py
 │   │   │       └── analysis_repository.py
 │   │   ├── models/ utils/  # scaffolding for later phases
-│   ├── tests/  (13 files, 105 tests)
+│   ├── tests/  (16 files, 118 tests)
 │   ├── requirements.txt
-│   ├── Dockerfile              # includes ffmpeg for audio conversion
+│   ├── Dockerfile              # repo-root build context, includes ffmpeg
 │   └── .env.example
 ├── frontend/
-│   ├── index.html              # Voice pipeline console ("Vaani")
-│   ├── css/global.css, voice.css, conversation.css
-│   └── js/api.js, voice.js, conversation.js, app.js
+│   ├── index.html              # Vaani console: Practice + Dashboard tabs
+│   ├── css/global.css, voice.css, conversation.css, dashboard.css
+│   └── js/api.js, voice.js, conversation.js, dashboard.js, app.js
+├── docs/
+│   └── DEPLOYMENT.md           # GitHub + Render walkthrough
 ├── docker-compose.yml
+├── render.yaml
+├── .dockerignore
 └── README.md
 ```
 
@@ -272,9 +322,11 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Then visit `http://localhost:8000/` and click the mic button — grant
-microphone permission, speak a sentence, and it should transcribe. Type
-something in the "Say it out loud" panel to hear Gemini TTS play back.
+Then visit `http://localhost:8000/` — the **Practice** tab has the mic
+button and full conversation loop; grant microphone permission, speak a
+sentence, and it should transcribe. The **Dashboard** tab shows progress
+stats, a score chart, frequent mistakes, and vocabulary once you've
+completed and analyzed a few conversations.
 
 Other useful URLs:
 
@@ -291,6 +343,14 @@ Other useful URLs:
 GEMINI_API_KEY=your-key docker compose up --build
 ```
 
+## Deploying
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the full walkthrough:
+pushing this repo to GitHub, setting up a free MongoDB Atlas cluster, and
+deploying to Render using the included `render.yaml` blueprint and
+`backend/Dockerfile` (build context is the repo root, so the image bakes
+in both `backend/` and `frontend/` as one deployable service).
+
 ## Running tests
 
 ```bash
@@ -298,20 +358,25 @@ cd backend
 python -m pytest -q
 ```
 
-All 105 tests pass without a real MongoDB or Gemini/NVIDIA credentials —
+All 118 tests pass without a real MongoDB or Gemini/NVIDIA credentials —
 MongoDB is faked with `mongomock-motor`, outbound HTTP to Gemini/NVIDIA is
 intercepted with `respx`, but audio conversion (`ffmpeg`) and voice
 activity detection (`webrtcvad`) run for real against synthetic (and,
 where `espeak-ng` is available, genuinely synthesized-speech) audio.
-Phase 4 and 5's suites stay intentionally leaner than Phase 3's exhaustive
+Phases 4-6's suites stay intentionally leaner than Phase 3's exhaustive
 provider-level coverage — pure-logic tests for the deterministic pieces
 (topic/context selection, time/rate-limit rules, fluency/confidence
-heuristics, score aggregation, streak logic), repository CRUD, REST CRUD,
-and one full WebSocket happy-path integration test exercising the whole
-turn (transcript → correction → vocabulary → score_update → audio),
-rather than an exhaustive edge-case matrix — the underlying STT/TTS/VAD
-pieces everything else composes are already covered thoroughly in Phase
-3's suite.
+heuristics, score aggregation, streak logic, mistake categorization),
+repository CRUD, REST CRUD, and one full WebSocket happy-path integration
+test exercising the whole turn (transcript → correction → vocabulary →
+score_update → audio), rather than an exhaustive edge-case matrix — the
+underlying STT/TTS/VAD pieces everything else composes are already
+covered thoroughly in Phase 3's suite. The frontend (Practice + Dashboard
+tabs) is checked with a jsdom-based smoke test rather than a real browser
+(unavailable in this build sandbox) — loading the actual HTML/JS,
+confirming every DOM selector exists, and simulating real user
+interactions including a full dashboard-tab-click → fetch → render →
+chart-draw → delete flow against fake API responses.
 
 ## Environment variables
 
@@ -320,9 +385,12 @@ it's already in `.gitignore`.
 
 ## What's next
 
-Phase 6 adds the learning dashboard: conversation history, vocabulary
-review, and progress charts built on top of the `learning_progress` and
-`vocabulary` collections Phase 5 already populates (spec §39-40). Phase 7
-adds production hardening (rate limiting and request-size limits are
-already in place from Phase 1) plus the Render deployment configuration.
-
+Phase 7 (production hardening) still has open items: broader integration
+test coverage, a review pass on rate limiting under concurrent load, and
+verifying the full flow end-to-end against real Gemini/NVIDIA credentials
+in an environment with outbound network access (this build sandbox
+couldn't reach either API directly — see `docs/DEPLOYMENT.md` to try it
+on your own deployment). Request-size limits and basic rate-limit
+scaffolding are already in place from Phase 1; the deployment
+configuration itself (Docker, `render.yaml`) is also already done as of
+this phase.
