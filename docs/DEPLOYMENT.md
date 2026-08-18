@@ -172,6 +172,20 @@ and that Network Access allows Render's traffic.
   to cap AI API spend — worth double-checking those values are set the way
   you want for a publicly-reachable deployment.
 
+### Troubleshooting the build
+
+**`Failed building wheel for webrtcvad` / `gcc: No such file or directory`**
+`webrtcvad` (used for voice activity detection, Phase 3) ships as a C
+extension with no prebuilt wheel for every platform, so it compiles from
+source at install time. `backend/Dockerfile` handles this with a
+multi-stage build — a throwaway "builder" stage installs `gcc` and
+compiles everything, then only the compiled packages (not the compiler)
+get copied into the slim runtime image. If you see this error, you're
+likely on an older copy of the Dockerfile from before this was fixed —
+pull the latest `backend/Dockerfile` and redeploy (Render → **Manual
+Deploy** → **Clear build cache & deploy** to make sure the old layer
+isn't reused).
+
 ---
 
 ## Appendix: removing a previously-committed secret
