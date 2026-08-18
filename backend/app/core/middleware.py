@@ -13,6 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.core.rate_limit import RateLimitMiddleware
 
 logger = get_logger(__name__)
 
@@ -90,6 +91,7 @@ def register_middleware(app: FastAPI) -> None:
 
     # Order matters: middleware added last runs first on the request path.
     app.add_middleware(BodySizeLimitMiddleware, max_bytes=10 * 1024 * 1024)
+    app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.rate_limit_per_minute)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(

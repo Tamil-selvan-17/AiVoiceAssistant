@@ -58,6 +58,15 @@ class Settings(BaseSettings):
     # --- Docs visibility (disable in production if desired) ---
     enable_api_docs: bool = Field(default=True, alias="ENABLE_API_DOCS")
 
+    # --- Rate limiting (project spec §46) ---
+    # In-memory per-IP sliding window, see app/core/rate_limit.py. Generous
+    # default -- this is meant to catch runaway loops/basic abuse, not
+    # throttle normal single-user usage (a live conversation alone can hit
+    # several requests per turn: transcribe-adjacent calls, WS messages
+    # don't count against this since they're not HTTP requests, but the
+    # REST endpoints around them do).
+    rate_limit_per_minute: int = Field(default=120, alias="RATE_LIMIT_PER_MINUTE")
+
     @field_validator("log_level")
     @classmethod
     def _validate_log_level(cls, v: str) -> str:

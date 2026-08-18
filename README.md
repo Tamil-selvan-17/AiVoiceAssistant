@@ -1,19 +1,17 @@
 # AI Voice Communication Assistant
 
 A single-user AI voice English-speaking coach. This repo currently contains
-**Phase 1 (Foundation)** through **Phase 6 (Learning Dashboard)** of the
+**Phase 1 (Foundation)** through **Phase 7 (Production Hardening)** of the
 full build: the FastAPI app skeleton, MongoDB connectivity, structured
 logging, global error handling, security middleware, health/readiness
 checks, a provider-agnostic AI abstraction (Gemini + NVIDIA), a global
 settings API, a working voice pipeline (mic capture, VAD, real
 speech-to-text, real text-to-speech), a continuous conversation loop over
 WebSocket, live grammar corrections/vocabulary detection/scoring shown
-turn-by-turn in the chat, and now a full learning dashboard — progress
-stats, a score-over-time chart, frequent-mistake patterns, conversation
-history, and vocabulary review. Production hardening and the Render
-deployment guide are documented already (see `docs/DEPLOYMENT.md`);
-remaining Phase 7 items (rate limiting polish, broader test coverage) are
-still open.
+turn-by-turn in the chat, a full learning dashboard, and now per-IP rate
+limiting, WebSocket connection/frame-size safeguards, and full developer
+documentation. See "What's next" below for the honest list of what's
+still open even within Phase 7.
 
 There is **no authentication** anywhere in this project by design — no
 login, no JWT, no users collection. The app opens straight to its dashboard.
@@ -215,6 +213,38 @@ login, no JWT, no users collection. The app opens straight to its dashboard.
   Render deploy walkthrough, including MongoDB Atlas setup since Render
   has no managed MongoDB)
 
+### Phase 7 — Production Hardening
+- **Per-IP rate limiting** (`app/core/rate_limit.py`) — an in-memory
+  sliding-window limiter (`RATE_LIMIT_PER_MINUTE`, default 120/min),
+  deliberately not Redis-backed (single-instance deployment, spec §63:
+  don't add infrastructure that isn't earning its keep). Health checks
+  and API docs are exempt so Render's own health probe never gets a
+  spurious `429`. Verified live over real HTTP, not just in tests: hit a
+  test limit of 3/min, got exactly three `200`s then `429`s, while
+  `/api/health` stayed exempt through the same run
+- **WebSocket safeguards**: a max audio-frame size (15MB, matching the
+  REST `/api/voice/transcribe` limit) and a cap on concurrent connections
+  (20) — a runaway/buggy client can no longer exhaust server memory via
+  either an oversized frame or a reconnect loop. New connections beyond
+  the cap are closed before the handshake completes rather than accepted
+  and immediately dropped
+- **`docs/DEVELOPER_GUIDE.md`** — architecture, the full
+  request/conversation lifecycle, how to add a new AI/STT/TTS provider or
+  conversation topic, MongoDB collection design, testing conventions, and
+  a troubleshooting section built from failure modes actually hit while
+  building this (not a generic template)
+- **`docs/API.md`** — task-oriented endpoint reference with real example
+  requests/responses, verified against the actual Pydantic schemas rather
+  than written from memory
+- **Honestly still open**: broader integration test coverage beyond the
+  current suite, a closer look at rate-limit behavior under real
+  concurrent load (only tested sequentially here), and the first genuine
+  end-to-end run against real Gemini/NVIDIA credentials — this
+  development environment has no outbound network access to either API,
+  so every AI call in the test suite is mocked at the HTTP layer; the
+  real integration should be exercised once deployed (see
+  `docs/DEPLOYMENT.md`)
+
 ## Project structure
 
 ```
@@ -237,7 +267,8 @@ ai-voice-assistant/
 │   │   │   ├── config.py      # Settings (env vars)
 │   │   │   ├── logging.py     # Structured JSON logging
 │   │   │   ├── exceptions.py  # AppError hierarchy + handlers
-│   │   │   └── middleware.py  # CORS, security headers, request IDs
+│   │   │   ├── middleware.py  # CORS, security headers, request IDs
+│   │   │   └── rate_limit.py  # per-IP sliding-window rate limiting
 │   │   ├── db/
 │   │   │   ├── mongodb.py     # Motor client lifecycle
 │   │   │   └── collections.py # Collection names + indexes
@@ -280,7 +311,7 @@ ai-voice-assistant/
 │   │   │       ├── learning_progress_repository.py
 │   │   │       └── analysis_repository.py
 │   │   ├── models/ utils/  # scaffolding for later phases
-│   ├── tests/  (16 files, 118 tests)
+│   ├── tests/  (20 files, 124 tests)
 │   ├── requirements.txt
 │   ├── Dockerfile              # repo-root build context, includes ffmpeg
 │   └── .env.example
@@ -289,7 +320,9 @@ ai-voice-assistant/
 │   ├── css/global.css, voice.css, conversation.css, dashboard.css
 │   └── js/api.js, voice.js, conversation.js, dashboard.js, app.js
 ├── docs/
-│   └── DEPLOYMENT.md           # GitHub + Render walkthrough
+│   ├── DEPLOYMENT.md            # GitHub + Render walkthrough
+│   ├── DEVELOPER_GUIDE.md       # architecture, extension points, troubleshooting
+│   └── API.md                   # endpoint reference with real examples
 ├── docker-compose.yml
 ├── render.yaml
 ├── .dockerignore
@@ -351,6 +384,17 @@ deploying to Render using the included `render.yaml` blueprint and
 `backend/Dockerfile` (build context is the repo root, so the image bakes
 in both `backend/` and `frontend/` as one deployable service).
 
+## Further documentation
+
+- **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** — architecture,
+  the full request/conversation lifecycle, how to add a new AI/STT/TTS
+  provider or conversation topic, MongoDB collection design, testing
+  conventions, and a troubleshooting section for the failure modes
+  actually hit while building this
+- **[docs/API.md](docs/API.md)** — task-oriented endpoint reference with
+  real example requests/responses; for the exhaustive always-in-sync
+  reference, run the app and visit `/docs`
+
 ## Running tests
 
 ```bash
@@ -358,7 +402,7 @@ cd backend
 python -m pytest -q
 ```
 
-All 118 tests pass without a real MongoDB or Gemini/NVIDIA credentials —
+All 124 tests pass without a real MongoDB or Gemini/NVIDIA credentials —
 MongoDB is faked with `mongomock-motor`, outbound HTTP to Gemini/NVIDIA is
 intercepted with `respx`, but audio conversion (`ffmpeg`) and voice
 activity detection (`webrtcvad`) run for real against synthetic (and,
@@ -385,12 +429,22 @@ it's already in `.gitignore`.
 
 ## What's next
 
-Phase 7 (production hardening) still has open items: broader integration
-test coverage, a review pass on rate limiting under concurrent load, and
-verifying the full flow end-to-end against real Gemini/NVIDIA credentials
-in an environment with outbound network access (this build sandbox
-couldn't reach either API directly — see `docs/DEPLOYMENT.md` to try it
-on your own deployment). Request-size limits and basic rate-limit
-scaffolding are already in place from Phase 1; the deployment
-configuration itself (Docker, `render.yaml`) is also already done as of
-this phase.
+Everything in the original spec's seven phases is now implemented in some
+form. What's genuinely left, stated plainly rather than declared "done":
+
+- **Real end-to-end verification against live Gemini/NVIDIA credentials.**
+  This development environment has no outbound network access to either
+  API — every AI call across the entire test suite is mocked at the HTTP
+  layer (`respx`). The code has never made one real round-trip to Gemini
+  or NVIDIA. Do this first after deploying (see `docs/DEPLOYMENT.md`).
+- **Rate limiting under real concurrent load.** The limiter is verified
+  correct sequentially (live curl test + unit tests), but not yet
+  exercised under genuine concurrent traffic.
+- **Broader integration coverage.** The suite favors one solid
+  happy-path-plus-edge-cases per feature over exhaustive combinatorial
+  coverage — reasonable for a single-user app, but worth expanding if this
+  ever needs to support more than one concurrent user.
+- **A settings UI for mother tongue / target language / difficulty.** The
+  backend and `app_settings` fully support these (spec §23, §41); the
+  frontend demo UI only wires up the default Tamil/English pair.
+

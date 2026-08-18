@@ -15,6 +15,7 @@ Wire protocol:
     preceded by a {"type": "audio_incoming", ...} text frame so the client
     knows a binary frame is coming next.
 """
+import asyncio
 import json
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
@@ -29,6 +30,18 @@ from app.services.storage import conversation_repository as repo
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+# Matches /api/voice/transcribe's own limit (app/api/routes/voice.py) --
+# there's no reason a WebSocket-uploaded utterance should be allowed to be
+# larger than the equivalent REST upload.
+_MAX_WS_AUDIO_BYTES = 15 * 1024 * 1024
+
+# Hobby-scale, single-user app -- this just guards against a runaway
+# client (e.g. a bug that reconnects in a loop) exhausting server memory/
+# file descriptors, not real multi-tenant capacity planning.
+_MAX_CONCURRENT_CONNECTIONS = 20
+_active_connections = 0
+_connections_lock = asyncio.Lock()
 
 
 async def _send_json(websocket: WebSocket, payload: dict) -> None:
@@ -131,6 +144,30 @@ async def conversation_websocket(
     db: AsyncIOMotorDatabase = Depends(get_database),
     settings: Settings = Depends(get_settings),
 ):
+    global _active_connections
+
+    async with _connections_lock:
+        if _active_connections >= _MAX_CONCURRENT_CONNECTIONS:
+            # Reject before accept() -- no sense completing the WS
+            # handshake just to immediately close it.
+            await websocket.close(code=1013)  # 1013 = "Try Again Later"
+            logger.warning("conversation_websocket_connection_limit_reached")
+            return
+        _active_connections += 1
+
+    try:
+        await _run_conversation_websocket(websocket, conversation_id, db, settings)
+    finally:
+        async with _connections_lock:
+            _active_connections -= 1
+
+
+async def _run_conversation_websocket(
+    websocket: WebSocket,
+    conversation_id: str,
+    db: AsyncIOMotorDatabase,
+    settings: Settings,
+) -> None:
     await websocket.accept()
 
     conversation = await repo.get_conversation(db, conversation_id)
@@ -169,6 +206,18 @@ async def conversation_websocket(
             raw_audio = message.get("bytes")
             if raw_audio is None:
                 # Ignore stray text frames (e.g. a client-side keepalive ping).
+                continue
+
+            if len(raw_audio) > _MAX_WS_AUDIO_BYTES:
+                await _send_json(
+                    websocket,
+                    {
+                        "type": "error",
+                        "message": "Audio clip too large.",
+                        "error_code": "PAYLOAD_TOO_LARGE",
+                    },
+                )
+                await _send_json(websocket, {"type": "status", "status": "listening"})
                 continue
 
             await _send_json(websocket, {"type": "status", "status": "processing"})

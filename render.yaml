@@ -32,6 +32,8 @@ services:
         value: "100"
       - key: AI_REQUEST_TIMEOUT_SECONDS
         value: "30"
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "120"
       - key: MONGODB_DATABASE
         value: ai_voice_assistant
       # --- Secrets: set these in the Render dashboard, not here ---
