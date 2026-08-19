@@ -18,13 +18,19 @@ from app.services.ai.base_provider import AIProvider, ChatMessage
 logger = get_logger(__name__)
 
 _BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-# NOTE: Google periodically retires Gemini model versions -- gemini-2.0-flash
-# (this project's original default) was retired in mid-2026 and started
-# returning 404s on every call. If you hit AI_PROVIDER_ERROR/404s in the
-# server logs, check https://ai.google.dev/gemini-api/docs/deprecations for
-# the current recommended model and update this default (or just set
-# GEMINI_MODEL in your environment, which always overrides this).
-_DEFAULT_MODEL = "gemini-2.5-flash"
+# NOTE: Google periodically retires/renames Gemini model versions --
+# gemini-2.0-flash (this project's original default) was retired in
+# mid-2026 and started returning 404s on every call; a pinned replacement
+# (gemini-2.5-flash) then ALSO 404'd for reasons that were never fully
+# pinned down (quite possibly another rename/access-tier change on
+# Google's side). Using Google's own "-latest" alias instead of a pinned
+# version sidesteps this whole recurring class of problem -- Google
+# maintains it to always point at their current recommended flash model.
+# If you ever hit AI_PROVIDER_ERROR/404s again, GET /api/ai/models?provider=gemini
+# (or https://ai.google.dev/gemini-api/docs/deprecations) to see what's
+# currently available on your account, and set GEMINI_MODEL explicitly if
+# needed -- that always overrides this default.
+_DEFAULT_MODEL = "gemini-flash-latest"
 
 _ANALYSIS_INSTRUCTIONS = (
     "You are an English-speaking coach. Analyze the exchange below and reply "
