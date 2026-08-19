@@ -137,7 +137,9 @@ async def handle_user_turn(
         return TurnResult(contains_speech=False)
 
     stt = GeminiSpeechToText(
-        api_key=settings.gemini_api_key, timeout_seconds=settings.ai_request_timeout_seconds
+        api_key=settings.gemini_api_key,
+        model=settings.gemini_model,
+        timeout_seconds=settings.ai_request_timeout_seconds,
     )
     transcription = await stt.transcribe(normalized.wav_bytes, sample_rate=normalized.sample_rate)
 

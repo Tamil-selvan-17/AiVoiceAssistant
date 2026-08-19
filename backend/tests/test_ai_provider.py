@@ -85,7 +85,7 @@ async def test_gemini_requires_configuration():
 @respx.mock
 async def test_gemini_generate_response_parses_text():
     respx.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     ).mock(
         return_value=Response(
             200,
@@ -108,7 +108,7 @@ async def test_gemini_generate_response_parses_text():
 @respx.mock
 async def test_gemini_analyze_conversation_parses_json():
     respx.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     ).mock(
         return_value=Response(
             200,
@@ -141,7 +141,7 @@ async def test_gemini_analyze_conversation_parses_json():
 @respx.mock
 async def test_gemini_handles_non_json_analysis_gracefully():
     respx.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     ).mock(
         return_value=Response(
             200,
@@ -159,7 +159,7 @@ async def test_gemini_handles_non_json_analysis_gracefully():
 @respx.mock
 async def test_gemini_wraps_http_error():
     respx.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     ).mock(return_value=Response(500, json={"error": "server error"}))
 
     provider = GeminiProvider(api_key="fake-key")
@@ -176,7 +176,7 @@ async def test_gemini_list_models_filters_by_supported_methods():
             json={
                 "models": [
                     {
-                        "name": "models/gemini-2.0-flash",
+                        "name": "models/gemini-2.5-flash",
                         "supportedGenerationMethods": ["generateContent"],
                     },
                     {
@@ -190,7 +190,7 @@ async def test_gemini_list_models_filters_by_supported_methods():
 
     provider = GeminiProvider(api_key="fake-key")
     models = await provider.list_models()
-    assert models == ["gemini-2.0-flash"]
+    assert models == ["gemini-2.5-flash"]
 
 
 # ---------------------------------------------------------------------------

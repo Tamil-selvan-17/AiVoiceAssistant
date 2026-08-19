@@ -38,6 +38,7 @@ async def _read_and_normalize(file: UploadFile):
 def _get_speech_to_text(settings: Settings) -> GeminiSpeechToText:
     return GeminiSpeechToText(
         api_key=settings.gemini_api_key,
+        model=settings.gemini_model,
         timeout_seconds=settings.ai_request_timeout_seconds,
     )
 

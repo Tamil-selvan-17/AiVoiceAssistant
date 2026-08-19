@@ -15,7 +15,7 @@ from httpx import ASGITransport, AsyncClient, Response
 from app.core.config import get_settings
 from app.main import app
 
-_GEMINI_STT_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+_GEMINI_STT_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 _GEMINI_TTS_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
     "gemini-2.5-flash-preview-tts:generateContent"

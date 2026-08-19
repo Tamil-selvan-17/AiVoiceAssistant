@@ -17,6 +17,13 @@ from app.services.voice.speech_to_text import SpeechToText, TranscriptionResult
 logger = get_logger(__name__)
 
 _BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
+# NOTE: Google periodically retires Gemini model versions -- gemini-2.0-flash
+# (this project's original default) was retired in mid-2026 and started
+# returning 404s on every call. If you hit AI_PROVIDER_ERROR/404s in the
+# server logs, check https://ai.google.dev/gemini-api/docs/deprecations for
+# the current recommended model and update this default (or just set
+# GEMINI_MODEL in your environment, which always overrides this).
+_DEFAULT_MODEL = "gemini-2.5-flash"
 
 _TRANSCRIBE_PROMPT = (
     "Transcribe the audio exactly as spoken, word for word, with no "
@@ -30,9 +37,9 @@ _TRANSCRIBE_PROMPT = (
 
 
 class GeminiSpeechToText(SpeechToText):
-    def __init__(self, api_key: str, model: str = "gemini-2.0-flash", timeout_seconds: int = 30):
+    def __init__(self, api_key: str, model: str = "", timeout_seconds: int = 30):
         self._api_key = api_key
-        self._model = model
+        self._model = model or _DEFAULT_MODEL
         self._timeout = timeout_seconds
 
     async def transcribe(self, wav_audio: bytes, sample_rate: int) -> TranscriptionResult:

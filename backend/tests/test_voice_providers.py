@@ -15,7 +15,7 @@ from app.core.exceptions import AIProviderError
 from app.services.voice.gemini_stt import GeminiSpeechToText
 from app.services.voice.gemini_tts import GeminiTextToSpeech
 
-_GEMINI_STT_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+_GEMINI_STT_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 _GEMINI_TTS_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
     "gemini-2.5-flash-preview-tts:generateContent"

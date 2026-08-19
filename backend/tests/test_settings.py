@@ -103,7 +103,7 @@ async def test_list_providers_reports_configuration_state(client):
 async def test_list_models_without_key_falls_back_to_configured_model(client):
     def fake_settings():
         s = get_settings()
-        return s.model_copy(update={"gemini_api_key": "", "gemini_model": "gemini-2.0-flash"})
+        return s.model_copy(update={"gemini_api_key": "", "gemini_model": "gemini-2.5-flash"})
 
     app.dependency_overrides[get_settings] = fake_settings
     try:
@@ -114,7 +114,7 @@ async def test_list_models_without_key_falls_back_to_configured_model(client):
     assert response.status_code == 200
     body = response.json()
     assert body["provider"] == "gemini"
-    assert body["models"] == ["gemini-2.0-flash"]
+    assert body["models"] == ["gemini-2.5-flash"]
 
 
 @pytest.mark.asyncio
