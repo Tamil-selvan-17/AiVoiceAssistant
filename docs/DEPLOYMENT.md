@@ -174,17 +174,22 @@ and that Network Access allows Render's traffic.
 
 ### Troubleshooting the build
 
-**`Failed building wheel for webrtcvad` / `gcc: No such file or directory`**
-`webrtcvad` (used for voice activity detection, Phase 3) ships as a C
-extension with no prebuilt wheel for every platform, so it compiles from
-source at install time. `backend/Dockerfile` handles this with a
-multi-stage build — a throwaway "builder" stage installs `gcc` and
-compiles everything, then only the compiled packages (not the compiler)
-get copied into the slim runtime image. If you see this error, you're
-likely on an older copy of the Dockerfile from before this was fixed —
-pull the latest `backend/Dockerfile` and redeploy (Render → **Manual
-Deploy** → **Clear build cache & deploy** to make sure the old layer
-isn't reused).
+**`Failed building wheel for webrtcvad`**
+The original `webrtcvad` package (used for voice activity detection,
+Phase 3) only ships an sdist, no prebuilt wheel — so pip compiles its C
+extension from source at install time, which needs a full C toolchain
+and turned out to be fragile across different base-image/OS versions (an
+earlier version of this Dockerfile tried a multi-stage build with `gcc`
+to work around this, and even that hit intermittent failures). The fix
+that actually stuck: `requirements.txt` uses **`webrtcvad-wheels`**
+instead — a maintained fork that ships prebuilt binary wheels for
+linux/x86_64, same `import webrtcvad` module name, same API, so no code
+changes were needed. `backend/Dockerfile` is back to a plain single-stage
+build with no compiler at all. If you see this error, you're on an older
+copy of the Dockerfile/requirements.txt from before this was fixed — pull
+the latest versions of both files and redeploy (Render → **Manual
+Deploy** → **Clear build cache & deploy** to make sure old layers aren't
+reused).
 
 ---
 

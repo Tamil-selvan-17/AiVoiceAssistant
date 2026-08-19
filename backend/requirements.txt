@@ -10,7 +10,12 @@ websockets==13.1
 
 # Audio processing (Phase 3)
 pydub==0.25.1
-webrtcvad==2.0.10
+# webrtcvad-wheels: a maintained fork of `webrtcvad` that ships prebuilt
+# binary wheels (the original `webrtcvad` package only ships an sdist, so
+# pip compiles its C extension from source at install time -- fragile
+# across base images/OS versions and needs a full C toolchain for no good
+# reason). Same import name (`import webrtcvad`), same API -- drop-in.
+webrtcvad-wheels==2.0.14
 numpy==2.1.2
 python-multipart==0.0.12
 
